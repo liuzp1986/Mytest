@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>第一个 ECharts 实例</title>
+        <!-- 引入 echarts.js -->
+        <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+        <!--script src="https://cdn.bootcdn.net/ajax/libs/echarts/2.2.7/echarts.js"></script-->
+        <!--script src="https://lib.baomitu.com/echarts/5.0.0/echarts.js"></script-->
+        <script src="./echarts-graph-modularity.min.js"></script>
+        <script src="https://cdn.bootcdn.net/ajax/libs/echarts-gl/1.1.2/echarts-gl.js"></script>
+        <script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    </head>
+<body>
+<div class="fm_box pd-10 border-grey" id="shanxing" style="height: 200px;"></div>
+ <div class="fm_box pd-10 border-grey" id="zhuzhuang" style="height: 200px;"></div>
+ <div class="fm_box pd-10 border-grey" id="mytest" style="height: 100px;"></div>
+
+ <script type="text/javascript">
+var myChart = echarts.init(document.getElementById('shanxing'));
+var myChart2 = echarts.init(document.getElementById('zhuzhuang'));
+var myChart3 = echarts.init(document.getElementById('mytest'));
+var nodes = createNodes(50, 50);
+var edges = createEdges(50, 50);
+option = {
+        title : {
+            text: '某站点用户访问来源',
+            x:'center'
+        },
+        tooltip : {
+            trigger: 'item',
+            formatter: "{a} <br/>{b} : {c} ({d}%)"
+        },
+        legend: {
+            orient : 'vertical',
+            x : 'left',
+            data:[]
+      //      "直接访问" , "邮件营销",'联盟广告','视频广告','搜索引擎']
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType : {
+                    show: true,
+                    type: ['pie','funnel'],
+                    
+                /*   option: {
+                        funnel: {
+                            x: '25%',
+                            width: '50%',
+                            funnelAlign: 'left',
+                            max: 1548
+                        }
+                    }*/
+                },
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        calculable : true,
+        series : [
+            {
+                name:'访问来源',
+                type:'pie',
+                radius : '55%',
+                center: ['50%', '55%'],
+                data:[]
+               /*   {value:335, name:'直接访问'},
+                                      {value:310, name:'邮件营销'},
+                    {value:234, name:'联盟广告'},
+                  {value:135, name:'视频广告'},
+                    {value:1548, name:'搜索引擎'}
+                ]*/
+            }
+        ]
+    };
+    option2 = {
+        title : {
+            text: '某地区蒸发量和降水量',
+            subtext: '纯属虚构'
+        },
+        tooltip : {
+            trigger: 'axis'
+        },
+        legend: {
+            data:['项目数']
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType : {show: true, type: ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        calculable : true,
+        xAxis : [
+            {
+                type : 'category',
+                data : []
+            }
+        ],
+        yAxis : [
+            {
+                type : 'value'
+            }
+        ],
+        series : [
+            {
+                name:'项目',
+                type:'bar',
+                data:[],
+
+            }
+
+        ]
+    };
+    $.ajax({
+        type: "get",
+        async: true, //同步执行
+        url: "test.json",
+        dataType: "json", //返回数据形式为json
+        success: function(data){
+            console.log(data.object[0].length);
+            for(var i= 0,len=data.object[0].length;i<len;i++){
+                var json={};
+                var data2=data.object[0];
+                json.name=data.object[0][i];
+                json.value=data.object[1][i];
+                option.series[0].data[i]=json;
+                option.legend.data=data.object[0];
+                option2.xAxis[0].data=data.object[0];
+                option2.series[0].data=data.object[1];
+            }
+            myChart.clear();
+          //  myChart.hideLoading();
+            myChart.setOption(option);
+            myChart2.clear();
+            myChart2.hideLoading();
+            myChart2.setOption(option2);// 使用刚指定的配置项和数据显示图表。
+          }  ,
+        error: function(errorMsg) {
+            alert("图表请求数据失败啦!");
+        }
+    });
+    option3 = {
+    series: [{
+        type: 'graphGL',
+        nodes: nodes,
+        edges: edges,
+        itemStyle: {
+            color: 'rgba(0,255,0,0.8)'
+        },
+        lineStyle: {
+            color: 'rgba(255,255,255,0.8)',
+            width: 3
+        },
+        forceAtlas2: {
+            steps: 5,
+            jitterTolerence: 10,
+            edgeWeightInfluence: 4
+        }
+    }]
+};
+function createNodes(widthCount, heightCount) {
+    var nodes = [];
+    for (var i = 0; i < widthCount; i++) {
+        for (var j = 0; j < heightCount; j++) {
+            nodes.push({
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+                value: 1
+            });
+        }
+    }
+    return nodes;
+};
+function createEdges(widthCount, heightCount) {
+    var edges = [];
+    for (var i = 0; i < widthCount; i++) {
+        for (var j = 0; j < heightCount; j++) {
+            if (i < widthCount - 1) {
+                edges.push({
+                    source: i + j * widthCount,
+                    target: i + 1 + j * widthCount,
+                    value: 1
+                });
+            }
+            if (j < heightCount - 1) {
+                edges.push({
+                    source: i + j * widthCount,
+                    target: i + (j + 1) * widthCount,
+                    value: 1
+                });
+            }
+        }
+    }
+    return edges;
+};
+ myChart3.clear();
+  myChart3.hideLoading();
+  myChart3.setOption(option3);
+   </script>
+</body>
+
+ </html>
